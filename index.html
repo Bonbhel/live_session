@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prédiction Données Entreprise</title>
+</head>
+<body>
+    <h1>Prédiction Données Excel</h1>
+    <input type="file" id="csvInput" accept=".csv">
+    <button onclick="uploadCsv()">Prédire</button>
+    <div id="results"></div>
+
+    <script>
+        async function uploadCsv() {
+            const fileInput = document.getElementById('csvInput');
+            const resultsDiv = document.getElementById('results');
+            
+            if (!fileInput.files[0]) {
+                alert("Sélectionnez un fichier Excel");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                resultsDiv.innerHTML = "Traitement en cours...";
+                
+                const response = await fetch('http://0.0.0.0:8000/predictCSV/', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                
+                let html = `<h3>Résultats (${data.predictions.length} prédictions)</h3>`;
+                data.predictions.forEach(pred => {
+                    html += `<p>Ligne ${pred.id} || ${pred.prediction} (confiance: ${(pred.confidence * 100).toFixed(1)}%) || ${pred.localite}:</p>`;
+                });
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch(error) {
+                resultsDiv.innerHTML = "Erreur: " + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
